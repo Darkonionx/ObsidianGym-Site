@@ -1,14 +1,20 @@
-// Zeigt Deutsch fuer deutschsprachige Browser, sonst Englisch. Umschalten per Link.
-(function(){
-  var q=new URLSearchParams(location.search).get('lang');
-  var lang=q||((navigator.language||'en').toLowerCase().indexOf('de')===0?'de':'en');
-  function show(l){
-    document.documentElement.lang=l;
-    document.querySelectorAll('section[lang]').forEach(function(s){s.classList.toggle('hidden',s.getAttribute('lang')!==l)});
-    document.querySelectorAll('.lang a').forEach(function(a){a.classList.toggle('active',a.dataset.l===l)});
-  }
-  document.addEventListener('DOMContentLoaded',function(){
-    document.querySelectorAll('.lang a').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();show(a.dataset.l)})});
-    show(lang);
+// Sprache VOR dem ersten Zeichnen festlegen (kein Flackern):
+// ?lang=de|en hat Vorrang, sonst Browsersprache (de -> Deutsch, alles andere -> Englisch).
+(function () {
+  var root = document.documentElement;
+  var q = new URLSearchParams(location.search).get('lang');
+  var lang = (q === 'de' || q === 'en') ? q
+    : ((navigator.language || 'en').toLowerCase().indexOf('de') === 0 ? 'de' : 'en');
+  root.setAttribute('data-lang', lang);
+  root.lang = lang;
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.lang a[data-l]');
+    if (!a) return;
+    e.preventDefault();
+    var l = a.getAttribute('data-l');
+    root.setAttribute('data-lang', l);
+    root.lang = l;
+    var u = new URL(location.href); u.searchParams.set('lang', l);
+    history.replaceState(null, '', u);
   });
 })();
